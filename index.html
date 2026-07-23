@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroVanguard // Model Rocket Physics Simulator</title>
+  <!-- Modern Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <!-- Chart.js CDN for analysis plots -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <svg class="logo-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2c1.5 4 3 6 5 9 1 1.5 2 3.5 2 5.5a7 7 0 0 1-14 0c0-2 1-4 2-5.5 2-3 3.5-5 5-9z" />
+          <path d="M9 17v1a3 3 0 0 0 6 0v-1" />
+          <path d="M12 11V7" />
+        </svg>
+        <div class="logo-text">
+          <h1>AEROVANGUARD</h1>
+          <p>High-Fidelity Model Rocket Simulator</p>
+        </div>
+      </div>
+      <div class="header-stats">
+        <div class="header-stat-box">
+          <span class="header-stat-label">TOP VELOCITY:</span>
+          <span id="header-top-velocity" class="header-stat-value">0.0 m/s</span>
+        </div>
+        <div class="header-stat-box">
+          <span class="header-stat-label">TOP ALTITUDE:</span>
+          <span id="header-top-altitude" class="header-stat-value">0.0 m</span>
+        </div>
+      </div>
+      <div class="status-bar">
+        <div class="status-indicator">
+          <span id="system-status-led" class="led ready"></span>
+          <span id="system-status-text">SYSTEM READY</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Dashboard Workspace -->
+    <main class="dashboard-grid">
+      <!-- 1. Left Control Panel: Configuration -->
+      <section class="panel glass-panel config-panel">
+        <h2 class="panel-title">Rocket Configurator</h2>
+        <div class="config-scroll-area">
+          
+          <!-- Section: Propulsion -->
+          <div class="config-group">
+            <h3 class="group-title">1. Propulsion</h3>
+            
+            <div class="control-row">
+              <label for="motor-preset">Motor Selection</label>
+              <select id="motor-preset">
+                <option value="A8-3">Estes A8-3 (Estes Class A)</option>
+                <option value="B6-4" selected>Estes B6-4 (Estes Class B)</option>
+                <option value="C6-5">Estes C6-5 (Estes Class C)</option>
+                <option value="D12-5">Estes D12-5 (Estes Class D)</option>
+                <option value="icbm">icbm motor (Heavy Class)</option>
+                <option value="custom">Custom Motor Configuration</option>
+              </select>
+            </div>
+
+            <!-- Custom motor parameters (collapsible/visible when custom selected) -->
+            <div id="custom-motor-controls" class="sub-controls hidden">
+              <div class="slider-control">
+                <div class="slider-labels">
+                  <span>Max Thrust</span>
+                  <span class="value-display"><span id="custom-max-thrust-val">20</span> N</span>
+                </div>
+                <input type="range" id="custom-max-thrust" min="5" max="1000" step="1" value="20">
+              </div>
+
+              <div class="slider-control">
+                <div class="slider-labels">
+                  <span>Average Thrust</span>
+                  <span class="value-display"><span id="custom-avg-thrust-val">10</span> N</span>
+                </div>
+                <input type="range" id="custom-avg-thrust" min="2" max="1000" step="1" value="10">
+              </div>
+
+              <div class="slider-control">
+                <div class="slider-labels">
+                  <span>Burn Time</span>
+                  <span class="value-display"><span id="custom-burn-time-val">1.5</span> s</span>
+                </div>
+                <input type="range" id="custom-burn-time" min="0.2" max="4.0" step="0.05" value="1.5">
+              </div>
+
+              <div class="slider-control">
+                <div class="slider-labels">
+                  <span>Propellant Mass</span>
+                  <span class="value-display"><span id="custom-propellant-mass-val">18</span> g</span>
+                </div>
+                <input type="range" id="custom-propellant-mass" min="1" max="500" step="1" value="18">
+              </div>
+
+              <div class="slider-control">
+                <div class="slider-labels">
+                  <span>Total Casing Mass</span>
+                  <span class="value-display"><span id="custom-casing-mass-val">35</span> g</span>
+                </div>
+                <input type="range" id="custom-casing-mass" min="5" max="500" step="1" value="35">
+              </div>
+            </div>
+
+            <div class="slider-control">
+              <div class="slider-labels">
+                <span>Ejection Delay (after burn)</span>
+                <span class="value-display"><span id="ejection-delay-val">4</span> s</span>
+              </div>
+              <input type="range" id="ejection-delay" min="1" max="8" step="1" value="4">
+            </div>
+
+            <div class="slider-control">
+              <div class="slider-labels">
+                <span>Motor Overhang</span>
+                <span class="value-display"><span id="motor-overhang-val">1.0</span> cm</span>
+              </div>
+              <input type="range" id="motor-overhang" min="0" max="4" step="0.1" value="1.0">
+            </div>
+          </div>
+
+          <!-- Section: Structure & Material -->
+          <div class="config-group">
+            <h3 class="group-title">2. Fuselage & Materials</h3>
+            
+            <div class="control-row">
+              <label for="body-material">Material Selection</label>
+              <select id="body-material">
+                <option value="cardboard">Cardboard (Lightweight / High Drag)</option>
+                <option value="plastic">Molded Plastic (Medium Weight / Smooth)</option>
+                <option value="fiberglass">Fiberglass (Heavy / Rigid / Streamlined)</option>
+                <option value="carbonfiber" selected>Carbon Fiber (Ultra-Light / Tough / High Speed)</option>
+              </select>
+            </div>
+
+            <div class="slider-control">
+              <div class="slider-labels">
+                <span>Body Length</span>
+                <span class="value-display"><span id="body-length-val">45</span> cm</span>
+              </div>
+              <input type="range" id="body-length" min="15" max="100" step="1" value="45">
+            </div>
+
+            <div class="slider-control">
+              <div class="slider-labels">
+                <span>Body Diameter</span>
+                <span class="value-display"><span id="body-diameter-val">34</span> mm</span>
+              </div>
+              <input type="range" id="body-diameter" min="10" max="60" step="1" value="34">
+            </div>
+
+            <div class="slider-control">
+              <div class="slider-labels">
+                <span>Wall Thickness</span>
+                <span class="value-display"><span id="wall-thickness-val">1.2</span> mm</span>
+              </div>
+              <input type="range" id="wall-thickness" min="0.5" max="3.0" step="0.1" value="1.2">
+            </div>
+          </div>
+
+          <!-- Section: Aerodynamics -->
+          <div class="config-group">
+            <h3 class="group-title">3. Aerodynamics</h3>
+            
+            <div class="control-row">
+              <label for="nose-type">Nose Cone Shape</label>
+              <select id="nose-type">
+                <option value="conical">Conical (Cd ~ 0.35)</option>
+                <option value="ogive" selected>Ogive (Cd ~ 0.25)</option>
+                <option value="parabolic">Parabolic (Cd ~ 0.20)</option>
+                <option value="haack">von Kármán (Haack Series, Cd ~ 0.18)</option>
+              </select>
+            </div>
+
+            <div class="slider-control">
+              <div class="slider-labels">
+                <span>Nose Cone Length</span>
+                <span class="value-display"><span id="nose-length-val">8</span> cm</span>
+              </div>
+              <input type="range" id="nose-length" min="4" max="20" step="0.5" value="8">
+            </div>
+
+            <div class="control-row">
+              <label for="fin-type">Fin Shape</label>
+              <select id="fin-type">
+                <option value="swept" selected>Swept</option>
+                <option value="trapezoidal">Trapezoidal</option>
+                <option value="elliptical">Elliptical (Lowest Drag)</option>
+                <option value="hexagonal">Hexagonal</option>
+              </select>
+            </div>
+
+            <div class="slider-control">
+              <div class="slider-labels">
+                <span>Fin Count</span>
+                <span class="value-display"><span id="fin-count-val">4</span> fins</span>
+              </div>
+              <input type="range" id="fin-count" min="3" max="6" step="1" value="4">
+            </div>
+
+            <div class="slider-control">
+              <div class="slider-labels">
+                <span>Fin Span (Width)</span>
+                <span class="value-display"><span id="fin-span-val">4</span> cm</span>
+              </div>
+              <input type="range" id="fin-span" min="2" max="10" step="0.5" value="4">
+            </div>
+          </div>
+
+          <!-- Section: Recovery System -->
+          <div class="config-group">
+            <h3 class="group-title">4. Recovery System</h3>
+            
+            <div class="slider-control">
+              <div class="slider-labels">
+                <span>Parachute Diameter</span>
+                <span class="value-display"><span id="parachute-diameter-val">30</span> cm</span>
+              </div>
+              <input type="range" id="parachute-diameter" min="15" max="75" step="1" value="30">
+            </div>
+
+            <div class="checkbox-control">
+              <input type="checkbox" id="smart-ejection" checked>
+              <label for="smart-ejection">Smart Ejection (Deploy exactly at Apogee)</label>
+            </div>
+          </div>
+          
+        </div>
+
+        <!-- Dynamic Mass Estimator Card -->
+        <div class="mass-card">
+          <div class="mass-row">
+            <span>Estimated Empty Rocket Mass:</span>
+            <strong><span id="empty-mass-val">--</span> g</strong>
+          </div>
+          <div class="mass-row">
+            <span>Total Liftoff Mass (with Motor):</span>
+            <strong><span id="liftoff-mass-val">--</span> g</strong>
+          </div>
+          <div class="mass-row">
+            <span>Aerodynamic Cd (Estimate):</span>
+            <strong><span id="cd-estimate-val">--</span></strong>
+          </div>
+        </div>
+
+        <!-- Primary Control Panel Buttons -->
+        <div class="control-actions">
+          <button id="btn-launch" class="btn btn-primary">LAUNCH ROCKET</button>
+          <button id="btn-reset" class="btn btn-secondary">RESET</button>
+        </div>
+
+        <!-- Loop and Config options -->
+        <div class="option-toggles">
+          <div class="toggle-control">
+            <span class="toggle-label">Auto-Cycle Loop</span>
+            <label class="switch">
+              <input type="checkbox" id="toggle-autocycle">
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="toggle-control">
+            <span class="toggle-label">Sound Effects</span>
+            <label class="switch">
+              <input type="checkbox" id="toggle-sound" checked>
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- 2. Center: Simulation Canvas + HUD -->
+      <section class="panel canvas-container">
+        <!-- Telemetry HUD Overlay -->
+        <div class="hud-overlay">
+          <div class="hud-box phase-box">
+            <div class="hud-label">FLIGHT STATUS</div>
+            <div class="hud-value" id="hud-phase">READY</div>
+          </div>
+          <div class="hud-metrics-grid">
+            <div class="hud-box">
+              <div class="hud-label">ALTITUDE</div>
+              <div class="hud-value"><span id="hud-altitude">0.0</span> <span class="unit">m</span></div>
+            </div>
+            <div class="hud-box">
+              <div class="hud-label">VELOCITY</div>
+              <div class="hud-value"><span id="hud-velocity">0.0</span> <span class="unit">m/s</span></div>
+            </div>
+            <div class="hud-box">
+              <div class="hud-label">ACCELERATION</div>
+              <div class="hud-value"><span id="hud-acceleration">0.0</span> <span class="unit">G</span></div>
+            </div>
+            <div class="hud-box">
+              <div class="hud-label">PROPELLANT</div>
+              <div class="hud-value"><span id="hud-fuel">100</span> <span class="unit">%</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- HTML5 Canvas for flight rendering -->
+        <canvas id="sim-canvas"></canvas>
+      </section>
+
+      <!-- 3. Right: Live Plots & Post-Flight Analytics -->
+      <section class="panel glass-panel analytics-panel">
+        <h2 class="panel-title">Live Telemetry & Flight Analytics</h2>
+        
+        <!-- Post-flight Statistics Summary Grid -->
+        <div class="stats-summary-grid">
+          <div class="stat-card">
+            <span class="stat-label">Max Altitude (Apogee)</span>
+            <span class="stat-val" id="stat-max-alt">0.0 m</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Max Velocity</span>
+            <span class="stat-val" id="stat-max-vel">0.0 m/s</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Max G-Force</span>
+            <span class="stat-val" id="stat-max-acc">0.0 G</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Burn Duration</span>
+            <span class="stat-val" id="stat-burn-dur">0.0 s</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Time to Apogee</span>
+            <span class="stat-val" id="stat-time-apogee">0.0 s</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Flight Duration</span>
+            <span class="stat-val" id="stat-flight-time">0.0 s</span>
+          </div>
+        </div>
+
+        <!-- Telemetry Graphs -->
+        <div class="charts-section">
+          <div class="chart-tabs">
+            <button class="tab-btn active" data-chart="altitude">Altitude</button>
+            <button class="tab-btn" data-chart="velocity">Velocity</button>
+            <button class="tab-btn" data-chart="acceleration">G-Force</button>
+            <button class="tab-btn" data-chart="forces">Forces</button>
+          </div>
+          <div class="chart-canvas-wrapper">
+            <canvas id="telemetry-chart"></canvas>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="physics.js"></script>
+  <script src="simulation.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
